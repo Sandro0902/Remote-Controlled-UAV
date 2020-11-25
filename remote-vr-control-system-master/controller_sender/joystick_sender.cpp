@@ -73,6 +73,7 @@ size_t get_axis_state(struct js_event *event, struct axis_state axes[3]) {
     return axis;
 }
 
+//Avoid small movement or imprecision of the axis to be read
 short normalize(short value){
   if (value < 1200 && value > -1200){
     return 0;
@@ -87,20 +88,20 @@ int main(int argc, char *argv[]) {
     socklen_t slen = sizeof(remaddr);               //Soket length
     char buf[BUFLEN];
     int recvlen;                                    //Length of the receiver
-    char *server = "10.101.160.200";              
+    char const*server = "10.101.160.200";              
     int msgint[5] = {0, 0, 0, 0, 0};                //Sends 5 messages per time
 
     // controller declarations
     const char *device;
     int js;
     struct js_event event;
-    struct axis_state axes[3] = {0};                //The joystick axis can have only four states
+    struct axis_state axes[3] = {0};                
     size_t axis;
 
     if (argc > 1) {
         device = argv[1];
     } else {
-        device = "/dev/input/js0";
+        device = "/dev/input/js2";                  //Please check for your input port, for my case it is js2
     }
 
     js = open(device, O_NONBLOCK);
@@ -132,24 +133,29 @@ int main(int argc, char *argv[]) {
     }
 
     bool is_precision_mode = true;
+    int abc = 0;
     while (true)  {
+    //while (abc<15000)  {  
       if (read_event(js, &event) != -1){
         if (event.type == JS_EVENT_BUTTON) {
           is_precision_mode = !is_precision_mode;
         }
         axis = get_axis_state(&event, axes);
-        msgint[0] = normalize(axes[2].x); // pitch
+        //
+        msgint[0] = normalize(axes[1].x); // pitch
         msgint[1] = normalize(axes[1].y); // roll
         msgint[2] = normalize(axes[0].y); // thrust/vertical control
         msgint[3] = normalize(axes[0].x); // yaw
         msgint[4] = is_precision_mode ? 100 : 0;
       }
-      std::cout << "\n roll: " << msgint[1]
-                << "\n pitch: " <<  msgint[0]
+
+      if(msgint[0] != 0 || msgint[1] != 0 || msgint[2] != 0 || msgint[3] != 0){
+      std::cout << "\n roll: " << msgint[0]
+                << "\n pitch: " <<  msgint[1]
                 << "\n thrust/v: " << msgint[2]
                 << "\n yaw: " << msgint[3]
                 << "\n mode: " << msgint[4]
-                << std::endl;
+                << std::endl;}
 
       if (sendto(fd, msgint, (sizeof(msgint)), 0, (struct sockaddr *)&remaddr,
           slen) == -1) {
@@ -157,6 +163,7 @@ int main(int argc, char *argv[]) {
         exit(1);
       }
       usleep(20000);
+      //abc++;//
     }
     close(fd);
     close(js);
