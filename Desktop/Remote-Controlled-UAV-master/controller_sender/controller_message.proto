@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package Controller;
+
+message ControlMsg{
+    int32 mode = 1;
+    int32 roll = 2;
+    int32 pitch = 3;
+    int32 thrust = 4;
+    int32 yaw = 5;
+}

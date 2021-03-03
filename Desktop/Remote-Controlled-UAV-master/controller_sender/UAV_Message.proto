@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package Vmsg;
+
+message UAVmsg{
+    message velocity {
+        float velocity_x = 1;
+        float velocity_y = 2;
+        float velocity_z = 3;
+    }
+
+    message acceleration {
+        float acc_pitch = 1;
+        float acc_roll = 2;
+        float acc_thrust = 3;
+    }
+
+    message angle {
+        float ang_pitch = 1;
+        float ang_roll = 2;
+        float ang_thrust = 3;
+    }
+}
+
